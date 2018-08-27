@@ -87,7 +87,9 @@ static struct board_info custom_board;
 
 static struct board_info *board;
 static char *layout_id;
+static char *os_layout_id;
 struct flash_layout *layout;
+struct flash_layout *os_layout;
 static char *opt_hw_id;
 static char *opt_hw_rev;
 static char *opt_hw_ver_add;
@@ -103,10 +105,11 @@ uint32_t kernel_len = 0;
 struct file_info rootfs_info;
 uint32_t rootfs_ofs = 0;
 uint32_t rootfs_align;
-static struct file_info boot_info;
+struct file_info boot_info;
 int combined;
 int strip_padding;
 int add_jffs2_eof;
+int dual_header_image = 0;
 
 static struct file_info inspect_info;
 static int extract = 0;
@@ -147,6 +150,18 @@ static struct flash_layout layouts[] = {
 		.kernel_ep	= 0x80000000,
 		.rootfs_ofs	= 0x140000,
 	}, {
+		.id		= "8Mmtk_dual_uboot_os",
+		.fw_max_len	= 0x770000,
+		.kernel_la	= 0x80000000,
+		.kernel_ep	= 0x80000000,
+		.rootfs_ofs	= 0x140000,
+	}, {
+		.id		= "8Mmtk_dual_uboot_full",
+		.fw_max_len	= 0x790200,
+		.kernel_la	= 0x80000000,
+		.kernel_ep	= 0x80000000,
+		.rootfs_ofs	= 0x140000,
+	}, {
 		.id		= "8MLmtk",
 		.fw_max_len	= 0x7b0000,
 		.kernel_la	= 0x80000000,
@@ -181,6 +196,9 @@ static void usage(int status)
 "  -o <file>       write output to the file <file>\n"
 "  -s              strip padding from the end of the image\n"
 "  -j              add jffs2 end-of-filesystem markers\n"
+"  -d              generate dual-header image\n"
+"  -b <file>       read bootloader image from the file <file>\n"
+"  -f <id>         flash layout to use for the bootloader header\n"
 "  -N <vendor>     set image vendor to <vendor>\n"
 "  -T <version>    set header version to <version>\n"
 "  -V <version>    set image version to <version>\n"
@@ -207,6 +225,40 @@ static int check_options(void)
 	} else if (extract) {
 		ERR("no firmware for inspection specified");
 		return -1;
+	}
+
+	if(dual_header_image) {
+		ret = get_file_stat(&boot_info);
+		if (ret)
+			return ret;
+
+		ret = get_file_stat(&kernel_info);
+		if (ret)
+			return ret;
+
+		if (layout_id == NULL) {
+			ERR("flash layout is not specified");
+			return -1;
+		}
+
+		layout = find_layout(layouts, layout_id);
+		if (layout == NULL) {
+			ERR("unknown flash layout \"%s\"", layout_id);
+			return -1;
+		}
+
+		if (os_layout_id == NULL) {
+			ERR("flash layout is not specified");
+			return -1;
+		}
+
+		os_layout = find_layout(layouts, os_layout_id);
+		if (os_layout == NULL) {
+			ERR("unknown flash layout \"%s\"", os_layout_id);
+			return -1;
+		}
+
+		return 0;
 	}
 
 	if (opt_hw_id == NULL) {
@@ -324,6 +376,27 @@ void fill_header(char *buf, int len)
 	unsigned ver_len;
 
 	memset(hdr, '\xff', sizeof(struct fw_header));
+
+	if (dual_header_image) {
+		int ret;
+		char *os_header_buf;
+		os_header_buf = malloc(kernel_info.file_size);
+		ret = read_to_buf(&kernel_info, os_header_buf);
+		if (ret)
+			goto out_free_buf;
+		memcpy(buf, os_header_buf, sizeof(struct fw_header));
+
+		memcpy(hdr->md5sum1, md5salt_boot, sizeof(hdr->md5sum1));
+
+		hdr->kernel_ofs += (layout->fw_max_len - os_layout->fw_max_len);
+		hdr->boot_len = htonl(boot_info.file_size);
+		hdr->fw_length = htonl(layout->fw_max_len);
+		memcpy(hdr->md5sum1, md5salt_boot, sizeof(hdr->md5sum1));
+		get_md5(buf, len, hdr->md5sum1);
+out_free_buf:
+		free(os_header_buf);
+		return;
+	}
 
 	hdr->version = htonl(bswap_32(hdr_ver));
 	ver_len = strlen(version);
@@ -533,7 +606,7 @@ int main(int argc, char *argv[])
 	while ( 1 ) {
 		int c;
 
-		c = getopt(argc, argv, "a:H:E:F:L:V:N:W:w:ci:k:r:R:o:xhsjv:y:T:e");
+		c = getopt(argc, argv, "a:H:E:F:L:V:N:W:w:ci:k:r:R:o:xhsjv:y:T:edb:f:");
 		if (c == -1)
 			break;
 
@@ -603,6 +676,15 @@ int main(int argc, char *argv[])
 			break;
 		case 'e':
 			custom_board.flags = FLAG_LE_KERNEL_LA_EP;
+			break;
+		case 'd':
+			dual_header_image = 1;
+			break;
+		case 'b':
+			boot_info.file_name = optarg;
+			break;
+		case 'f':
+			os_layout_id = optarg;
 			break;
 		case 'h':
 			usage(EXIT_SUCCESS);

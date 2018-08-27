@@ -80,6 +80,7 @@ static uint32_t hdr_ver = HEADER_VERSION_V1;
 
 static char *layout_id;
 struct flash_layout *layout;
+struct flash_layout *os_layout;
 static char *opt_hw_id;
 static uint32_t hw_id;
 static char *opt_hw_rev;
@@ -97,10 +98,11 @@ uint32_t kernel_len = 0;
 struct file_info rootfs_info;
 uint32_t rootfs_ofs = 0;
 uint32_t rootfs_align;
-static struct file_info boot_info;
+struct file_info boot_info;
 int combined;
 int strip_padding;
 int add_jffs2_eof;
+int dual_header_image = 0;
 static uint32_t fw_max_len;
 static uint32_t reserved_space;
 

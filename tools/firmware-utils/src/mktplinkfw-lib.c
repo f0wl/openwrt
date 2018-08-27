@@ -35,12 +35,15 @@ extern char *progname;
 extern uint32_t kernel_len;
 extern struct file_info kernel_info;
 extern struct file_info rootfs_info;
+extern struct file_info boot_info;
 extern struct flash_layout *layout;
+extern struct flash_layout *os_layout;
 extern uint32_t rootfs_ofs;
 extern uint32_t rootfs_align;
 extern int combined;
 extern int strip_padding;
 extern int add_jffs2_eof;
+extern int dual_header_image;
 
 static unsigned char jffs2_eof_mark[4] = {0xde, 0xad, 0xc0, 0xde};
 
@@ -231,11 +234,17 @@ int build_fw(size_t header_size)
 
 	memset(buf, 0xff, buflen);
 	p = buf + header_size;
+	if (dual_header_image) {
+		ret = read_to_buf(&boot_info, p);
+		if (ret)
+			goto out_free_buf;
+		p = buf + (layout->fw_max_len - os_layout->fw_max_len);
+	}
 	ret = read_to_buf(&kernel_info, p);
 	if (ret)
 		goto out_free_buf;
 
-	if (!combined) {
+	if (!dual_header_image && !combined) {
 		p = buf + rootfs_ofs;
 
 		ret = read_to_buf(&rootfs_info, p);

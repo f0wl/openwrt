@@ -316,6 +316,13 @@ define Build/tplink-v2-image
 	rm -rf $@.new
 endef
 
+define Build/tplink-v2-bootimage
+	$(STAGING_DIR_HOST)/bin/mktplinkfw2 \
+		-d -F $(TPLINK_BOOT_FLASHLAYOUT) -f $(TPLINK_FLASHLAYOUT) -b $(UBOOT_PATH) \
+		-k $@ -o $@.new $(1)
+	@mv $@.new $@
+endef
+
 json_quote=$(subst ','\'',$(subst ",\",$(1)))
 #")')
 metadata_devices=$(if $(1),$(subst "$(space)","$(comma)",$(strip $(foreach v,$(1),"$(call json_quote,$(v))"))))
