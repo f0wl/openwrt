@@ -265,6 +265,7 @@ platform_check_image() {
 	tplink,c20-v1|\
 	tplink,c20-v4|\
 	tplink,c50-v3|\
+	tplink,c50-v4|\
 	tplink,tl-mr3020-v3|\
 	tplink,tl-mr3420-v5|\
 	tplink,tl-wa801nd-v5|\
@@ -363,6 +364,9 @@ platform_do_upgrade() {
 	ubnt-erx|\
 	ubnt-erx-sfp)
 		nand_do_upgrade "$ARGV"
+		;;
+	tplink,c50-v4)
+		platform_upgrade_tpl_recovery "$ARGV"
 		;;
 	*)
 		default_do_upgrade "$ARGV"

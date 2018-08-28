@@ -231,6 +231,25 @@ define Device/tplink_c50-v3
 endef
 TARGET_DEVICES += tplink_c50-v3
 
+define Device/tplink_c50-v4
+  $(Device/tplink)
+  DTS := ArcherC50V4
+  IMAGE_SIZE := 7616k
+  DEVICE_TITLE := TP-Link ArcherC50 v4
+  TPLINK_FLASHLAYOUT := 8Mmtk_dual_uboot_os
+  TPLINK_BOOT_FLASHLAYOUT := 8Mmtk_dual_uboot_full
+  TPLINK_HWID := 0x001D589B
+  TPLINK_HWREV := 0x93
+  TPLINK_HWREVADD := 0x2
+  TPLINK_HVERSION := 3
+  UBOOT_PATH := $$(BIN_DIR)/u-boot-tpl-mtk-c50-v4/split_uboot_c50_v4.bin
+  IMAGES := tftp-recovery.bin sysupgrade.bin factory.bin
+  IMAGE/factory.bin := tplink-v2-image -e | tplink-v2-bootimage
+  IMAGE/tftp-recovery.bin := pad-extra 192k | append-uboot | pad-to 320k | tplink-v2-image -e
+  DEVICE_PACKAGES := u-boot-tpl-mtk-c50-v4
+endef
+TARGET_DEVICES += tplink_c50-v4
+
 define Device/tplink_tl-mr3020-v3
   $(Device/tplink)
   DTS := TL-MR3020V3
