@@ -64,6 +64,20 @@ define Device/hiveap-330
 endef
 TARGET_DEVICES += hiveap-330
 
+define Device/panda
+  DEVICE_TITLE := OCEDO Panda
+  DEVICE_PACKAGES := kmod-ath9k kmod-usb-core kmod-usb2 kmod-rtc-ds1307 uboot-envtools wpad-mini
+  BLOCKSIZE := 128k
+  PAGESIZE := 2048
+  SUBPAGESIZE := 512
+  SUPPORTED_DEVICES := ocedo,panda
+  KERNEL_NAME := zImage
+  IMAGES := fdt.bin sysupgrade.bin
+  IMAGE/sysupgrade.bin := sysupgrade-tar dtb=$$(KDIR)/image-$$(DEVICE_DTS).dtb | append-metadata
+  IMAGE/fdt.bin := append-dtb
+endef
+TARGET_DEVICES += panda
+
 endif
 
 $(eval $(call BuildImage))
