@@ -10,6 +10,9 @@ CI_KERNPART="${CI_KERNPART:-kernel}"
 # 'ubi' partition on NAND contains UBI
 CI_UBIPART="${CI_UBIPART:-ubi}"
 
+# 'devicetree' partition on NAND contains DTB
+CI_DTBPART="${CI_DTBPART:-devicetree}"
+
 ubi_mknod() {
 	local dir="$1"
 	local dev="/dev/$(basename $dir)"
@@ -117,6 +120,8 @@ nand_upgrade_prepare_ubi() {
 	local rootfs_type="$2"
 	local has_kernel="${3:-0}"
 	local has_env="${4:-0}"
+	local has_dtb="${5:-0}"
+	local dtb_length="${6:-0}"
 
 	local mtdnum="$( find_mtd_index "$CI_UBIPART" )"
 	if [ ! "$mtdnum" ]; then
@@ -145,6 +150,7 @@ nand_upgrade_prepare_ubi() {
 	local kern_ubivol="$( nand_find_volume $ubidev $CI_KERNPART )"
 	local root_ubivol="$( nand_find_volume $ubidev rootfs )"
 	local data_ubivol="$( nand_find_volume $ubidev rootfs_data )"
+	local dtb_ubivol="$( nand_find_volume $ubidev $CI_DTBPART )"
 
 	# remove ubiblock device of rootfs
 	local root_ubiblk="ubiblock${root_ubivol:3}"
@@ -160,11 +166,20 @@ nand_upgrade_prepare_ubi() {
 	[ "$kern_ubivol" ] && ubirmvol /dev/$ubidev -N $CI_KERNPART || true
 	[ "$root_ubivol" ] && ubirmvol /dev/$ubidev -N rootfs || true
 	[ "$data_ubivol" ] && ubirmvol /dev/$ubidev -N rootfs_data || true
+	[ "$dtb_ubivol" -a "$has_dtb" = "1" ] && ubirmvol /dev/$ubidev -N $CI_DTBPART || true
 
 	# update kernel
 	if [ "$has_kernel" = "1" ]; then
 		if ! ubimkvol /dev/$ubidev -N $CI_KERNPART -s $kernel_length; then
 			echo "cannot create kernel volume"
+			return 1;
+		fi
+	fi
+
+	# update dtb
+	if [ "$has_dtb" = "1" ]; then
+		if ! ubimkvol /dev/$ubidev -N $CI_DTBPART -s $dtb_length; then
+			echo "cannot create dtb volume"
 			return 1;
 		fi
 	fi
@@ -230,7 +245,7 @@ nand_upgrade_ubinized() {
 nand_upgrade_ubifs() {
 	local rootfs_length=`(cat $1 | wc -c) 2> /dev/null`
 
-	nand_upgrade_prepare_ubi "$rootfs_length" "ubifs" "0" "0"
+	nand_upgrade_prepare_ubi "$rootfs_length" "ubifs" "0" "0" "0" "0"
 
 	local ubidev="$( nand_find_ubi "$CI_UBIPART" )"
 	local root_ubivol="$(nand_find_volume $ubidev rootfs)"
@@ -248,24 +263,33 @@ nand_upgrade_tar() {
 
 	local kernel_length=`(tar xf $tar_file ${board_dir}/kernel -O | wc -c) 2> /dev/null`
 	local rootfs_length=`(tar xf $tar_file ${board_dir}/root -O | wc -c) 2> /dev/null`
+	local dtb_length=`(tar xf $tar_file ${board_dir}/dtb -O | wc -c) 2> /dev/null`
 
 	local rootfs_type="$(identify_tar "$tar_file" ${board_dir}/root)"
 
 	local has_kernel=1
 	local has_env=0
+	local has_dtb=0
 
 	[ "$kernel_length" != 0 -a -n "$kernel_mtd" ] && {
 		tar xf $tar_file ${board_dir}/kernel -O | mtd write - $CI_KERNPART
 	}
 	[ "$kernel_length" = 0 -o ! -z "$kernel_mtd" ] && has_kernel=0
+	[ "$dtb_length" != 0 ] && has_dtb=1
 
-	nand_upgrade_prepare_ubi "$rootfs_length" "$rootfs_type" "$has_kernel" "$has_env"
+	nand_upgrade_prepare_ubi "$rootfs_length" "$rootfs_type" "$has_kernel" "$has_env" "$has_dtb" "$dtb_length"
 
 	local ubidev="$( nand_find_ubi "$CI_UBIPART" )"
 	[ "$has_kernel" = "1" ] && {
 		local kern_ubivol="$(nand_find_volume $ubidev $CI_KERNPART)"
 		tar xf $tar_file ${board_dir}/kernel -O | \
 			ubiupdatevol /dev/$kern_ubivol -s $kernel_length -
+	}
+
+	[ "$has_dtb" = "1" ] && {
+		local dtb_ubivol="$(nand_find_volume $ubidev $CI_DTBPART)"
+		tar xf $tar_file ${board_dir}/dtb -O | \
+			ubiupdatevol /dev/$dtb_ubivol -s $dtb_length -
 	}
 
 	local root_ubivol="$(nand_find_volume $ubidev rootfs)"
