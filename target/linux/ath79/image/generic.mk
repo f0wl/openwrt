@@ -176,6 +176,15 @@ define Device/glinet_ar300m_nor
 endef
 TARGET_DEVICES += glinet_ar300m_nor
 
+define Device/glinet_gl-mifi
+  ATH_SOC := ar9331
+  DEVICE_TITLE := GL.iNet GL-MiFi
+  DEVICE_PACKAGES := kmod-usb-core kmod-usb2
+  IMAGE_SIZE := 16000k
+  SUPPORTED_DEVICES += gl-mifi
+endef
+TARGET_DEVICES += glinet_gl-mifi
+
 define Device/iodata_etg3-r
   ATH_SOC := ar9342
   DEVICE_TITLE := I-O DATA ETG3-R
