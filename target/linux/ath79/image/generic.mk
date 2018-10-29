@@ -329,6 +329,22 @@ define Device/phicomm_k2t
 endef
 TARGET_DEVICES += phicomm_k2t
 
+define Device/sonicwall_sonicpoint-ni
+  ATH_SOC := ar9132
+  DEVICE_TITLE := Sonicwall SonicPoint Ni
+  BLOCKSIZE := 128k
+  LOADER_TYPE := gz
+  LOADER_FLASH_OFFS := 0x462000
+  COMPILE := loader-$(1).gz
+  COMPILE/loader-$(1).gz := loader-okli-compile-pnor
+  IMAGE_SIZE := 8192k
+  IMAGES := sysupgrade.bin
+  KERNEL := kernel-bin | append-dtb | lzma | uImage lzma -M 0x4f4b4c49 | loader-okli $(1) 8128 | uImage gzip
+  KERNEL_INITRAMFS := kernel-bin | append-dtb | gzip | uImage gzip
+  DEVICE_PACKAGES := -swconfig
+endef
+TARGET_DEVICES += sonicwall_sonicpoint-ni
+
 define Device/wd_mynet-wifi-rangeextender
   ATH_SOC := ar9344
   DEVICE_TITLE := Western Digital My Net Wi-Fi Range Extender
