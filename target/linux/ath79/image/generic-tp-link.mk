@@ -21,6 +21,48 @@ define Device/tplink_archer-c7-v2
 endef
 TARGET_DEVICES += tplink_archer-c7-v2
 
+define Device/tplink_cpe-wbs-v1
+  $(Device/tplink)
+  ATH_SOC := ar9344
+  LOADER_TYPE := elf
+  LOADER_FLASH_OFFS := 0x43000
+  COMPILE := loader-$(1).elf
+  COMPILE/loader-$(1).elf := loader-okli-compile
+  KERNEL := kernel-bin | append-dtb | lzma | uImage lzma -M 0x4f4b4c49 | loader-okli $(1) 12288
+  IMAGES += factory.bin
+  IMAGE/sysupgrade.bin := append-rootfs | tplink-safeloader sysupgrade | append-metadata
+  IMAGE/factory.bin := append-rootfs | tplink-safeloader factory
+  DEVICE_PACKAGES := rssileds
+endef
+
+define Device/tplink_cpe210-v1
+  $(Device/tplink_cpe-wbs-v1)
+  DEVICE_TITLE := TP-LINK CPE210 v1
+  TPLINK_BOARD_ID := CPE210
+endef
+TARGET_DEVICES += tplink_cpe210-v1
+
+define Device/tplink_cpe510-v1
+  $(Device/tplink_cpe-wbs-v1)
+  DEVICE_TITLE := TP-LINK CPE510 v1
+  TPLINK_BOARD_ID := CPE510
+endef
+TARGET_DEVICES += tplink_cpe510-v1
+
+define Device/tplink_wbs210-v1
+  $(Device/tplink_cpe-wbs-v1)
+  DEVICE_TITLE := TP-LINK WBS210 v1
+  TPLINK_BOARD_ID := WBS210
+endef
+TARGET_DEVICES += tplink_wbs210-v1
+
+define Device/tplink_wbs510-v1
+  $(Device/tplink_cpe-wbs-v1)
+  DEVICE_TITLE := TP-LINK WBS510 v1
+  TPLINK_BOARD_ID := WBS510
+endef
+TARGET_DEVICES += tplink_wbs510-v1
+
 define Device/tplink_re450-v2
   $(Device/tplink)
   ATH_SOC := qca9563

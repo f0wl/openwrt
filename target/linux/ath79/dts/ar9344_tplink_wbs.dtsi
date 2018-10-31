@@ -1,0 +1,50 @@
+// SPDX-License-Identifier: GPL-2.0-or-later OR MIT
+
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/input/input.h>
+
+#include "ar9344_tplink_cpe_wbs.dtsi"
+
+/ {
+	compatible = "tplink,wbs-v1", "qca,ar9344";
+
+	leds {
+		compatible = "gpio-leds";
+
+		lan0 {
+			label = "tp-link:green:lan0";
+			gpios = <&gpio 11 GPIO_ACTIVE_LOW>;
+			default-state = "off";
+		};
+
+		lan1 {
+			label = "tp-link:green:lan1";
+			gpios = <&gpio 12 GPIO_ACTIVE_LOW>;
+			default-state = "off";
+		};
+
+		link1 {
+			label = "tp-link:green:link1";
+			gpios = <&gpio 13 GPIO_ACTIVE_LOW>;
+			default-state = "off";
+		};
+
+		link2 {
+			label = "tp-link:green:link2";
+			gpios = <&gpio 14 GPIO_ACTIVE_LOW>;
+			default-state = "off";
+		};
+
+		link3 {
+			label = "tp-link:green:link3";
+			gpios = <&gpio 15 GPIO_ACTIVE_LOW>;
+			default-state = "off";
+		};
+
+		link4 {
+			label = "tp-link:green:link4";
+			gpios = <&gpio 2 GPIO_ACTIVE_LOW>;
+			default-state = "off";
+		};
+	};
+};
