@@ -179,6 +179,44 @@
 	};
 };
 
+&nand {
+	pinctrl-0 = <&nand_pins>;
+	pinctrl-names = "default";
+	status = "okay";
+
+	nand@0 {
+		partitions {
+			compatible = "fixed-partitions";
+			#address-cells = <1>;
+			#size-cells = <1>;
+
+			partition@0 {
+				label = "uboot";
+				reg = <0x000000 0x2c0000>;
+				read-only;
+			};
+			partition@1 {
+				label = "nand-tffs";
+				reg = <0x2c0000 0x840000>;
+				read-only;
+			};
+			partition@2 {
+				label = "kernel";
+				reg = <0xb00000 0x400000>;
+			};
+			partition@3 {
+				label = "reserved-kernel";
+				reg = <0xf00000 0x400000>;
+				read-only;
+			};
+			partition@4 {
+				label = "ubi";
+				reg = <0x1300000 0x6d00000>;
+			};
+		};
+	};
+};
+
 &cryptobam {
 	status = "okay";
 };
