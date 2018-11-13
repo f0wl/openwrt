@@ -233,6 +233,10 @@
 	status = "okay";
 };
 
+&qpic_bam {
+	status = "okay";
+};
+
 &pcie0 {
 	status = "okay";
 	perst-gpio = <&tlmm 38 GPIO_ACTIVE_LOW>;
