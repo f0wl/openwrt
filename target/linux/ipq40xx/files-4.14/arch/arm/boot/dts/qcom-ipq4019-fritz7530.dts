@@ -25,9 +25,9 @@
 
 	aliases {
 		led-boot = &power;
-		led-failsafe = &flash;
+		led-failsafe = &power;
 		led-running = &power;
-		led-upgrade = &flash;
+		led-upgrade = &power;
 	};
 
 	soc {
@@ -95,13 +95,13 @@
 			status = "okay";
 		};
 
-		
 		ess-switch@c000000 {
 			status = "okay";
 		};
 
 		edma@c080000 {
 			status = "okay";
+			qcom,num_gmac = <1>;
 		};
 	};
 
@@ -152,11 +152,29 @@
 };
 
 &tlmm {
-	serial_pins: serial_pinmux {
+	serial_0_pins: serial_pinmux {
 		mux {
-			pins = "gpio60", "gpio61";
+			pins = "gpio16", "gpio17";
 			function = "blsp_uart0";
 			bias-disable;
+		};
+	};
+	nand_pins: nand_pins {
+		pullups {
+			pins = "gpio52", "gpio53", "gpio58",
+				"gpio59";
+			function = "qpic";
+			bias-pull-up;
+		};
+
+		pulldowns {
+			pins = "gpio54", "gpio55", "gpio56",
+				"gpio57", "gpio60", "gpio61",
+				"gpio62", "gpio63", "gpio64",
+				"gpio65", "gpio66", "gpio67",
+				"gpio68", "gpio69";
+			function = "qpic";
+			bias-pull-down;
 		};
 	};
 };
