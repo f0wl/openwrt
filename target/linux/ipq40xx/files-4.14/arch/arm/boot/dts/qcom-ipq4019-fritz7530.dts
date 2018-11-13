@@ -68,7 +68,7 @@
 		};
 
 		serial@78af000 {
-			pinctrl-0 = <&serial_pins>;
+			pinctrl-0 = <&serial_0_pins>;
 			pinctrl-names = "default";
 			status = "okay";
 		};
