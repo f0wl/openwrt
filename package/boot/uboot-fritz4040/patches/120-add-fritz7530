@@ -1,0 +1,107 @@
+Index: u-boot-2017-01-29-6946ebba/board/qcom/ipq40xx_cdp/ipq40xx_cdp.c
+===================================================================
+--- u-boot-2017-01-29-6946ebba.orig/board/qcom/ipq40xx_cdp/ipq40xx_cdp.c
++++ u-boot-2017-01-29-6946ebba/board/qcom/ipq40xx_cdp/ipq40xx_cdp.c
+@@ -490,6 +490,20 @@ int get_eth_mac_address(uchar *enetaddr,
+ 		enetaddr[9], enetaddr[10], enetaddr[11]);
+ 
+ 	return 0;
++#elif defined CONFIG_MODEL_FRITZ7530
++	enetaddr[0] = 0x44;
++	enetaddr[1] = 0x4E;
++	enetaddr[2] = 0x6D;
++	enetaddr[3] = 0xAE;
++	enetaddr[4] = 0x42;
++	enetaddr[5] = 0x9B;
++	enetaddr[6] = 0x44;
++	enetaddr[7] = 0x4E;
++	enetaddr[8] = 0x6D;
++	enetaddr[9] = 0xAE;
++	enetaddr[10] = 0x42;
++	enetaddr[11] = 0x9C;
++	return 0;
+ #else
+ 	if (sfi->flash_type != SMEM_BOOT_MMC_FLASH) {
+ 		if (qca_smem_flash_info.flash_type == SMEM_BOOT_SPI_FLASH)
+Index: u-boot-2017-01-29-6946ebba/boards.cfg
+===================================================================
+--- u-boot-2017-01-29-6946ebba.orig/boards.cfg
++++ u-boot-2017-01-29-6946ebba/boards.cfg
+@@ -206,6 +206,7 @@ versatileqemu                arm
+ integratorap_cm946es         arm         arm946es    integrator          armltd         -               integratorap:CM946ES
+ integratorcp_cm946es         arm         arm946es    integrator          armltd         -               integratorcp:CM946ES
+ fritz4040		     arm	 armv7	     ipq40xx_cdp	 qcom		qca
++fritz7530		     arm	 armv7	     ipq40xx_cdp	 qcom		qca
+ ipq806x_cdp                  arm         armv7       ipq806x_cdp         qcom           ipq
+ ipq40xx_cdp                  arm         armv7       ipq40xx_cdp         qcom           qca
+ ca9x4_ct_vxp                 arm         armv7       vexpress            armltd
+Index: u-boot-2017-01-29-6946ebba/include/configs/fritz7530.h
+===================================================================
+--- /dev/null
++++ u-boot-2017-01-29-6946ebba/include/configs/fritz7530.h
+@@ -0,0 +1,52 @@
++/*
++ * Configuration for the AVM Fritz!Box 7530
++ */
++
++#ifndef __CONFIG_H
++#define __CONFIG_H
++
++#include <configs/ipq40xx_cdp.h>
++
++#define CONFIG_MODEL_FRITZ7530
++#define CONFIG_MODEL		"FRITZ7530"
++#define MTDIDS_DEFAULT		"nand1=nand1"
++#define MTDPARTS_DEFAULT	"mtdparts=nand1:2816k(urlader)ro,8448k(nand-tffs)ro,4096k(kernel)ro,4096k(reserved-kernel)ro,111616k(ubi)"
++
++#undef CONFIG_BOOTDELAY
++#define CONFIG_BOOTDELAY 3
++
++#undef CONFIG_BOOTCOMMAND
++#define CONFIG_BOOTCOMMAND		"run fritzboot"
++
++#define CONFIG_EXTRA_ENV_SETTINGS				\
++	"mtdids=" MTDIDS_DEFAULT "\0"				\
++	"mtdparts=" MTDPARTS_DEFAULT "\0"			\
++	"nandboot=nboot firmware && bootm\0"			\
++	"tftpboot=tftpsrv && bootm; sleep 5; run tftpboot\0"	\
++	"fritzboot=run nandboot || run tftpboot;\0"		\
++
++#undef V_PROMPT
++#define V_PROMPT		"(" CONFIG_MODEL ") # "
++
++#define CONFIG_SERVERIP         192.168.1.70
++#define CONFIG_NETMASK          255.255.255.0
++#define CONFIG_BOOTFILE         CONFIG_MODEL ".bin"
++#define CONFIG_LZO
++#define CONFIG_LZMA
++#define CONFIG_SYS_LONGHELP
++
++#define CONFIG_CMD_MISC
++#define CONFIG_CMD_ELF
++#define CONFIG_CMD_IMI
++#define CONFIG_CMD_LOADB
++#define CONFIG_CMD_SPI
++#define CONFIG_CMD_TFTPSRV
++
++#undef CONFIG_SYS_LOAD_ADDR
++#define CONFIG_SYS_LOAD_ADDR    0x85000000
++
++#undef CONFIG_SYS_TEXT_BASE
++#define CONFIG_SYS_TEXT_BASE	0x84200000
++
++#endif
++
+Index: u-boot-2017-01-29-6946ebba/include/configs/ipq40xx_cdp.h
+===================================================================
+--- u-boot-2017-01-29-6946ebba.orig/include/configs/ipq40xx_cdp.h
++++ u-boot-2017-01-29-6946ebba/include/configs/ipq40xx_cdp.h
+@@ -171,7 +171,7 @@ typedef struct {
+ 					CONFIG_IPQ_MAX_SPI_DEVICE)
+ 
+ #define CONFIG_IPQ_MAX_SPI_DEVICE	1
+-#define CONFIG_IPQ_MAX_NAND_DEVICE	0
++#define CONFIG_IPQ_MAX_NAND_DEVICE	1
+ 
+ #define CONFIG_IPQ_NAND_NAND_INFO_IDX	1
+ #define CONFIG_QPIC_NAND_NAND_INFO_IDX	1
