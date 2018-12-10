@@ -42,6 +42,7 @@ ipq40xx_setup_interfaces()
 		ucidef_add_switch "switch0" \
 			"0u@eth0" "3:lan" "4:lan"
 		;;
+	asus,map-ac2200|\
 	openmesh,a42|\
 	openmesh,a62)
 		ucidef_set_interfaces_lan_wan "eth1" "eth0"
@@ -57,6 +58,13 @@ ipq40xx_setup_macs()
 	local board="$1"
 
 	case "$board" in
+	asus,map-ac2200)
+		mac_addr=$(mtd_get_mac_binary_ubi Factory 4102)
+		lan_mac_addr=$(macaddr_add "$mac_addr" 3)
+		wan_mac_addr=$(macaddr_add "$mac_addr" 1)
+		ucidef_set_interface_macaddr "lan" "$lan_mac_addr"
+		ucidef_set_interface_macaddr "wan" "$wan_mac_addr"
+		;;
 	asus,rt-ac58u)
 		CI_UBIPART=UBI_DEV
 		wan_mac=$(mtd_get_mac_binary_ubi Factory 20486)
